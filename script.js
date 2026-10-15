@@ -3,6 +3,8 @@ const pool = document.getElementById('pool');
 const resetBtn = document.getElementById('resetBtn');
 const exportBtn = document.getElementById('exportBtn');
 const boardTitle = document.getElementById('boardTitle');
+const board = document.getElementById('board');
+const tierLabels = [...document.querySelectorAll('.tier-label')];
 
 const FONT = '"Ubuntu Mono", monospace';
 const LONG_PRESS_MS = 180; // удержание пальца перед началом перетаскивания
@@ -202,7 +204,26 @@ document.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 /* ---------- Названия уровней ---------- */
-document.querySelectorAll('.tier-label').forEach(label => {
+function syncTierLabelWidth() {
+  const firstLabel = tierLabels[0];
+  if (!firstLabel) return;
+
+  const style = getComputedStyle(firstLabel);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+  const rootStyle = getComputedStyle(document.documentElement);
+  const minWidth = parseFloat(rootStyle.getPropertyValue('--label-min-w')) || 0;
+  const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+  const widestText = Math.max(...tierLabels.map(label =>
+    ctx.measureText(label.textContent.trim() || '?').width
+  ));
+
+  board.style.setProperty('--label-w', `${Math.ceil(Math.max(minWidth, widestText + padding + 2))}px`);
+}
+
+tierLabels.forEach(label => {
   label.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -216,8 +237,15 @@ document.querySelectorAll('.tier-label').forEach(label => {
   });
   label.addEventListener('blur', () => {
     if (!label.textContent.trim()) label.textContent = '?';
+    label.textContent = label.textContent.replace(/\s+/g, ' ').trim();
+    syncTierLabelWidth();
   });
+  label.addEventListener('input', syncTierLabelWidth);
 });
+
+syncTierLabelWidth();
+window.addEventListener('resize', syncTierLabelWidth);
+document.fonts?.ready.then(syncTierLabelWidth);
 
 /* Название тир-листа: Enter снимает фокус */
 boardTitle.addEventListener('keydown', (e) => {
@@ -232,35 +260,13 @@ resetBtn.addEventListener('click', () => {
 /* ---------- Экспорт в PNG ---------- */
 exportBtn.addEventListener('click', exportBoard);
 
-function wrapLines(ctx, text, maxW) {
-  const words = text.split(' ');
-  const lines = [];
-  let line = '';
-  for (const w of words) {
-    const test = line ? line + ' ' + w : w;
-    if (ctx.measureText(test).width <= maxW || !line) line = test;
-    else { lines.push(line); line = w; }
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
 function drawLabel(ctx, text, x, y, w, h) {
-  const pad = 10;
-  let size = 36, lines = [];
-  for (; size >= 12; size -= 2) {
-    ctx.font = `bold ${size}px ${FONT}`;
-    lines = wrapLines(ctx, text, w - pad * 2);
-    const fits = lines.every(l => ctx.measureText(l).width <= w - pad * 2) &&
-                 lines.length * size * 1.2 <= h - pad * 2;
-    if (fits) break;
-  }
+  const size = 36;
+  ctx.font = `bold ${size}px ${FONT}`;
   ctx.fillStyle = '#000';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const lh = size * 1.2;
-  const startY = y + h / 2 - (lines.length - 1) * lh / 2;
-  lines.forEach((l, i) => ctx.fillText(l, x + w / 2, startY + i * lh));
+  ctx.fillText(text || '?', x + w / 2, y + h / 2);
 }
 
 function drawCover(ctx, img, x, y, size) {
@@ -281,8 +287,16 @@ async function exportBoard() {
     await document.fonts.load(`bold 30px ${FONT}`, title + labelTexts + 'АаЯя');
   } catch (e) { /* если шрифт недоступен, используется запасной моноширинный */ }
 
-  // Размеры картинки фиксированы и не зависят от экрана устройства
-  const W = 1000, LABEL_W = 140, SIZE = 110, GAP = 6, MIN_H = 120, BORDER = 2;
+  // Левая колонка и весь холст растут под самую длинную подпись без переноса.
+  const SIZE = 110, GAP = 6, MIN_H = 120, BORDER = 2;
+  const measureCanvas = document.createElement('canvas');
+  const measureCtx = measureCanvas.getContext('2d');
+  measureCtx.font = `bold 36px ${FONT}`;
+  const labelWidth = Math.max(...tierLabels.map(label =>
+    measureCtx.measureText(label.textContent.trim() || '?').width
+  ));
+  const LABEL_W = Math.max(140, Math.ceil(labelWidth + 40));
+  const W = Math.max(1000, LABEL_W + 860);
   const cols = Math.floor((W - LABEL_W - GAP) / (SIZE + GAP));
   const TITLE_H = title ? 80 : 0;
 
@@ -356,3 +370,4 @@ async function exportBoard() {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }, 'image/png');
 }
+
