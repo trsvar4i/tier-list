@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier List</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-side"></div>
+    <h1>Tier List</h1>
+    <div class="header-side right">
+      <button id="exportBtn" class="btn">Экспорт в PNG</button>
+    </div>
+  </header>
+
+  <main>
+    <input
+      type="text"
+      id="boardTitle"
+      class="board-title"
+      placeholder="Напишите название для Tier list"
+      maxlength="60"
+      spellcheck="false"
+    >
+
+    <section id="board">
+      <div class="tier-row">
+        <div class="tier-label" style="background:#ff7f7f" contenteditable="true" spellcheck="false">S</div>
+        <div class="tier-drop dropzone"></div>
+      </div>
+      <div class="tier-row">
+        <div class="tier-label" style="background:#ffbf7f" contenteditable="true" spellcheck="false">A</div>
+        <div class="tier-drop dropzone"></div>
+      </div>
+      <div class="tier-row">
+        <div class="tier-label" style="background:#ffdf7f" contenteditable="true" spellcheck="false">B</div>
+        <div class="tier-drop dropzone"></div>
+      </div>
+      <div class="tier-row">
+        <div class="tier-label" style="background:#bfff7f" contenteditable="true" spellcheck="false">C</div>
+        <div class="tier-drop dropzone"></div>
+      </div>
+      <div class="tier-row">
+        <div class="tier-label" style="background:#7fbfff" contenteditable="true" spellcheck="false">D</div>
+        <div class="tier-drop dropzone"></div>
+      </div>
+    </section>
+
+    <p class="hint">
+      💡 Чтобы изменить название оценки, нажми на букву слева, введи свой текст и нажми Enter.
+    </p>
+    <p class="hint hint-touch">
+      👆 На телефоне: зажми карточку на долю секунды, затем перетаскивай.
+    </p>
+
+    <section class="pool-section">
+      <h2>Карточки</h2>
+      <div id="pool" class="pool dropzone"></div>
+
+      <div class="actions">
+        <label class="btn btn-big primary" for="fileInput">+ Добавить фото</label>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        <button id="resetBtn" class="btn btn-big">Сбросить таблицу</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
